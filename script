@@ -11,9 +11,41 @@ Section:NewButton("GUI", "All in One", function()
 loadstring(game:HttpGet("https://raw.githubusercontent.com/pixelheadx/Polakya/main/Bestscript.md"))()
 print("Clicked")
 end)
-local Tab = Window:NewTab("Booga Booga")
-local Section = Tab:NewSection("NilHub")
-Section:NewButton("Nilhub", "Booga Booga", function()
-loadstring(game:HttpGet("https://raw.githubusercontent.com/Texchy/Nilhub/main/NilhubFree.lua"))()
+local Tab = Window:NewTab("Phantom Forces")
+local Section = Tab:NewSection("PF ESP")
+Section:NewButton("PF", "ESP SCRIPT", function()
+print("ESP PF Initialized.")
+enemyteam = game.Workspace.Players:GetChildren()[1]
+friendlyteam = game.Workspace.Players:GetChildren()[2]
+while wait(0.1) do
+    for _,v in enemyteam:GetDescendants() do
+        if v.ClassName == "Model" then
+            if v:FindFirstChild("Highlight") then
+
+            else
+            local h = Instance.new("Highlight",v)
+            h.FillColor = Color3.new(1,0,0)
+            h.FillTransparency = 0.4
+            print(string.format("Highlighted %s",v.Name))
+
+            end
+
+        end
+    end
+    for _,v in friendlyteam:GetDescendants() do
+        if v.ClassName == "Model" then
+            if v:FindFirstChild("Highlight") then
+
+            else
+            local h = Instance.new("Highlight",v)
+            h.FillColor = Color3.new(0.227451, 1, 0.054902)
+            h.FillTransparency = 0.8
+            print(string.format("Highlighted %s",v.Name))
+
+            end
+
+        end
+    end
+end
 print("Clicked")
 end)
