@@ -1,0 +1,128 @@
+local RunService = game:GetService("RunService")
+local Players = game:GetService("Players")
+local Camera = workspace.CurrentCamera
+local LocalPlayer = Players.LocalPlayer
+local Mouse = LocalPlayer:GetMouse()
+
+-- GUI creation
+local ScreenGui = Instance.new("ScreenGui", game.CoreGui)
+local EspButton = Instance.new("TextButton", ScreenGui)
+local AimbotButton = Instance.new("TextButton", ScreenGui)
+
+ScreenGui.Name = "EspAimbotGui"
+EspButton.Name = "EspButton"
+AimbotButton.Name = "AimbotButton"
+
+EspButton.Position = UDim2.new(0, 10, 0, 10)
+EspButton.Size = UDim2.new(0, 100, 0, 50)
+EspButton.Text = "Toggle ESP"
+EspButton.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+EspButton.TextColor3 = Color3.fromRGB(0, 0, 0)
+
+AimbotButton.Position = UDim2.new(0, 10, 0, 70)
+AimbotButton.Size = UDim2.new(0, 100, 0, 50)
+AimbotButton.Text = "Toggle Aimbot"
+AimbotButton.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+AimbotButton.TextColor3 = Color3.fromRGB(0, 0, 0)
+
+local EspEnabled = false
+local AimbotEnabled = false
+
+EspButton.MouseButton1Click:Connect(function()
+    EspEnabled = not EspEnabled
+    EspButton.Text = EspEnabled and "ESP: ON" or "ESP: OFF"
+end)
+
+AimbotButton.MouseButton1Click:Connect(function()
+    AimbotEnabled = not AimbotEnabled
+    AimbotButton.Text = AimbotEnabled and "Aimbot: ON" or "Aimbot: OFF"
+end)
+
+local function isEnemy(player)
+    return player.Team ~= LocalPlayer.Team
+end
+
+local function createBox()
+    local box = Drawing.new("Square")
+    box.Thickness = 1
+    box.Filled = false
+    box.Visible = false
+    return box
+end
+
+local function createTracer()
+    local tracer = Drawing.new("Line")
+    tracer.Thickness = 1
+    tracer.Visible = false
+    return tracer
+end
+
+local playerBoxes = {}
+local playerTracers = {}
+
+local function updateDrawing(player)
+    if player.Character and player.Character:FindFirstChild("Head") then
+        local head = player.Character.Head
+        local headPos, onScreen = Camera:WorldToViewportPoint(head.Position)
+
+        if onScreen and isEnemy(player) and EspEnabled then
+            local box = playerBoxes[player]
+            local tracer = playerTracers[player]
+            box.Position = Vector2.new(headPos.X - 50, headPos.Y - 100)
+            box.Size = Vector2.new(100, 200)
+            box.Color = Color3.fromRGB(255, 0, 0)
+            box.Visible = true
+            
+            tracer.From = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y)
+            tracer.To = Vector2.new(headPos.X, headPos.Y)
+            tracer.Color = Color3.fromRGB(255, 0, 0)
+            tracer.Visible = true
+
+            -- Lock onto the player's head
+            if AimbotEnabled and (Mouse.X - headPos.X)^2 + (Mouse.Y - headPos.Y)^2 < 5000 then
+                mouse1press()
+                wait(0.1)
+                mouse1release()
+            end
+        else
+            playerBoxes[player].Visible = false
+            playerTracers[player].Visible = false
+        end
+    else
+        playerBoxes[player].Visible = false
+        playerTracers[player].Visible = false
+    end
+end
+
+local function onPlayerAdded(player)
+    playerBoxes[player] = createBox()
+    playerTracers[player] = createTracer()
+    
+    player.CharacterAdded:Connect(function()
+        updateDrawing(player)
+    end)
+end
+
+local function onPlayerRemoving(player)
+    if playerBoxes[player] then
+        playerBoxes[player]:Remove()
+        playerBoxes[player] = nil
+    end
+    if playerTracers[player] then
+        playerTracers[player]:Remove()
+        playerTracers[player] = nil
+    end
+end
+
+Players.PlayerAdded:Connect(onPlayerAdded)
+Players.PlayerRemoving:Connect(onPlayerRemoving)
+
+for _, player in pairs(Players:GetPlayers()) do
+    onPlayerAdded(player)
+end
+
+RunService.RenderStepped:Connect(function()
+    for _, player in pairs(Players:GetPlayers()) do
+        updateDrawing(player)
+    end
+end)
